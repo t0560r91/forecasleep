@@ -1,4 +1,4 @@
-## Ultimate Sleep Guide                                                          
+## Ultimate Sleep Guide  
 
 
 Introduction  
@@ -16,6 +16,5 @@ Developed an web application where user can authorize the server to fetch sleep 
 Discussion  
 Prediction accuracy can be significantly improved by having a larger dataset and wearing tracker device 24/7 without skipping a day or night, and also including caffeine and alcohol intake data.
 
-Tools Used: Python | Sci-kit Learn | Flask | Brython | HTML | Fitbit Tracker Device | Fitbit Web API | 
-Github: https://www.github.com/sehokim88/ultimate_sleep_guide
+Tools Used: Python | Sci-kit Learn | Flask | Brython | HTML | Fitbit Tracker Device | Fitbit Web API 
 
