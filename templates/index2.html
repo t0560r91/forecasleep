@@ -1,0 +1,93 @@
+<html>
+<head>
+<script src="{{ url_for('static', filename='brython.js') }}"></script>
+<script src="{{ url_for('static', filename='brython_stdlib.js') }}"></script>
+</head>
+
+<body onload="brython(1)">
+<script type="text/python3">
+from browser import document, alert, ajax, window
+import json
+
+#####################################################
+def get_auth(ev):
+    auth_url = 'https://api.fitbit.com/oauth2/token'
+    auth_code = document['url'].value
+    form_param = f'client_id=22DGXK&grant_type=authorization_code&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2F&{auth_code}'
+        
+    req = ajax.ajax()
+    req.open('POST', auth_url, True)
+    req.set_header('Content-Type', 'application/x-www-form-urlencoded')
+    req.set_header('Authorization', 'Basic MjJER1hLOjZiYjU5OWFjZWI0YmU2YzNiM2NhYTIxNjMyNDdmZmVl')
+    req.send(form_param)
+    req.bind('complete', get_token)
+
+def get_token(res):
+    data = json.loads(res.text)
+    req = ajax.ajax()
+    req.open('POST', 'get_token', True)
+    req.send(json.dumps(data))
+    req.bind('complete', display_token)
+
+def display_token(res):
+    data = json.loads(res.text)
+    document['output6'].html = data['result']
+
+document['token_button'].bind('click', get_auth)
+
+
+#####################################################
+def input_data(ev):
+    req = ajax.ajax()
+    req.open('POST', 'input_data', True)
+    req.bind('complete', display_input)
+    req.send(json.dumps({"start": document['start_input'].value, "end": document['end_input'].value}))
+
+def display_input(res):
+    data = json.loads(res.text)
+    document['output3'].html = data['start']
+    document['output4'].html = data['end']
+
+document["input_button"].bind("click", input_data)
+
+
+#####################################################
+def get_prediction(ev):
+    req = ajax.ajax()
+    req.open('GET', 'get_prediction', True)
+    req.send()
+    req.bind('complete', display_prediction)
+
+def display_prediction(res):
+    data = json.loads(res.text)
+    document['output5'].html = data['prediction']
+
+def display_loading(ev):
+    document['output5'].html = 'fitting best model...'
+
+document["calculate_button"].bind("click", display_loading)
+document["calculate_button"].bind("click", get_prediction)
+
+
+</script>
+<a href="
+https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=22DGXK&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000%2F&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800"> Login</a>
+<button id="token_button">token</button>
+<input id="start_input">start</input>
+<input id="end_input">end</input>
+<input type="hidden" id="url"> </input>
+<script>
+    var u = window.location.search;
+    u = u.substring(1,u.length);
+    document.getElementById("url").value = u;
+</script>
+<button id="input_button">input</button>
+<button id="calculate_button">calculate</button>
+<div id="output1"></div>
+<div id="output2"></div>
+<div id="output3"></div>
+<div id="output4"></div>
+<div id="output5"></div>
+<div id="output6"></div>
+</body>
+</html>
