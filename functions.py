@@ -32,14 +32,12 @@ def import_concat(path, table, dates):
 #####################################################
 def datespace(start, end, step=1):
     """
-    input
-    ==========================
-    start: date string in '%Y-%m-%d'
-    end: date string in '%Y-%m-%d'
+    INPUT:
+        start: date string in '%Y-%m-%d'
+        end: date string in '%Y-%m-%d'
 
-    output
-    ==========================
-    list of datetime.date objects ranging from the given start and end date
+    OUTPUT:
+        list of datetime.date objects ranging from the given start and end date
 
     """
     if start <= end:
@@ -60,14 +58,12 @@ def scale_time(time):
     """
     "Scale and split time strings to fit the parameter for the model"
     
-    input
-    ============================
-    start: time string in '%H:%M'
-    end: time string in '%H:%M'
+    INPUT:
+        start: time string in '%H:%M'
+        end: time string in '%H:%M'
     
-    output
-    ============================
-    start_sin, start_cos, end_sin, end_cos in ndarray
+    OUTPUT:
+        start_sin, start_cos, end_sin, end_cos in ndarray
     """
     td = timedelta(hours=time.hour, minutes=time.minute)
     in_minutes = td.seconds//60
@@ -80,14 +76,12 @@ def parse_datetime(time_str, out_format='datetime'):
     """
     "reads time_str in any format and writes a datetime, date, or time obejct"
     
-    input
-    ============================
-    time_str: time string in any format
-    out_format: datetime, date, or time
+    INPUT:
+        time_str: time string in any format
+        out_format: datetime, date, or time
     
-    output
-    ============================
-    parsed time_string
+    OUTPUT:
+        parsed time_string
     """
     in_formats = ['%Y-%m-%dT%H:%M:%S.%f', '%Y-%m-%d %H:%M:%S.%f', 
                   '%Y-%m-%dT%H:%M:%S', '%Y-%m-%d %H:%M:%S', 
@@ -109,14 +103,12 @@ def reformat_time_string(time_str):
     """
     "reads time_str in any format and reformats it to 24 hour cycle or 12 hour cycle 
     which ever was not the original format."
+
+    INPUT:
+        time_str: time string in any format
     
-    input
-    ============================
-    time_str: time string in any format
-    
-    output
-    ============================
-    time_str: time string reformated
+    OUTPUT:
+        time_str: time string reformated
     """
     dt = parse_datetime(time_str)
     reformat = datetime.strftime(dt, '%Y-%m-%d %I:%M%p')
@@ -133,14 +125,12 @@ def parse_stage(x, stage='deep'):
     "parse a Fitbit-generated nested dictionary of sleep stage data 
     and returns a specified stage data."
     
-    input
-    =============================
-    x: a nested dictionary
-    stage: sleep stage
+    INPUT:
+        x: a nested dictionary
+        stage: sleep stage
 
-    output
-    =============================
-    minutes or counts of each specified sleep stage
+    OUTPUT:
+        minutes or counts of each specified sleep stage
     
     """
     try:
@@ -251,7 +241,8 @@ def get_diff(df, col):
 
 def get_avg(df, n):
     """
-    takes in multiple datetime columns and returns a columns with average datetime values
+    takes in multiple datetime columns
+    returns a columns with average datetime values
     """
     # generate ingredients
     scaler = TimeScaler()
@@ -281,7 +272,8 @@ def get_avg(df, n):
 
 def get_var(df, n):
     """
-    takes in multiple datetime columns and returns a columns with variance among the columns
+    takes in multiple datetime columns 
+    returns a columns with variance among the columns
     """
     # generate ingredients
     scaler = TimeScaler()
@@ -308,7 +300,8 @@ def get_var(df, n):
 #############################################
 def get_top5(x):
     """
-    takes an array and returns the top 5% values of the array
+    takes an array
+    returns the top 5% values of the array
     """
     x = x.sort_values(ascending=False)
     cut = int(len(x)*0.05 // 1)
@@ -317,7 +310,8 @@ def get_top5(x):
 
 def get_bottom5(x):
     """
-    takes an array and returns the bottom 5% values of the array
+    takes an array
+    returns the bottom 5% values of the array
     """
     x = x.sort_values(ascending=False)
     cut = int(len(x)*0.95 // 1)
@@ -353,7 +347,7 @@ def get_input_bed(input_start, input_end):
     return td.seconds/60
 
 
-# MODELING
+# MODELING 
 ##########################################
 
 def estimator_cv_scores(X, y, estimator, a=None, max_iter=None):
