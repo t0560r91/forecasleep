@@ -107,16 +107,16 @@ def parse_datetime(time_str, out_format='datetime'):
 
 def reformat_time_string(time_str):
     """
-    "reads time_str in any format and writes a datetime, date, or time obejct"
+    "reads time_str in any format and reformats it to 24 hour cycle or 12 hour cycle 
+    which ever was not the original format."
     
     input
     ============================
     time_str: time string in any format
-    out_format: datetime, date, or time
     
     output
     ============================
-    parsed time_string
+    time_str: time string reformated
     """
     dt = parse_datetime(time_str)
     reformat = datetime.strftime(dt, '%Y-%m-%d %I:%M%p')
@@ -129,6 +129,20 @@ def reformat_time_string(time_str):
 # fitbit sleep specific
 #############################
 def parse_stage(x, stage='deep'):
+    """
+    "parse a Fitbit-generated nested dictionary of sleep stage data 
+    and returns a specified stage data."
+    
+    input
+    =============================
+    x: a nested dictionary
+    stage: sleep stage
+
+    output
+    =============================
+    minutes or counts of each specified sleep stage
+    
+    """
     try:
         if stage in ['deep','rem','light']:
             return x['summary'][stage]['minutes']
@@ -137,7 +151,12 @@ def parse_stage(x, stage='deep'):
     except:
         return np.nan        
 
+
 def stitch_drop_append(df):
+    """
+    takes in a Fitbit style Pandas Data Frame and return a new DataFrame 
+    with sleep logs that are less than 90 minutes apart from one another stitched together into a one sleep log. 
+    """
     new_df=df.copy()
     later = np.where((get_delta(new_df) < 120) & (get_delta(new_df) > 0))[0]
     earlier = later - 1
@@ -182,19 +201,31 @@ def stitch_drop_append2(df):
 
 # broadcasting operators
 ################################################################
+def get_delta(df):
+    """
+    takes in two datetime columns
+    returns datetime column with timedelta between the two points in time.
+    """
+    df = df.copy()
+    bracket = np.zeros(df.shape[0])
+    bracket[1:] = df.loc[1:,'start'].values - df.loc[:df.shape[0]-2, 'end'].values
+    return bracket/60000000000
+    
 def get_delta_scale(df):
+    """
+    takes in two datetime columns
+    returns datetime column with timedelta between the two points in time cycling back to 24hous period.
+    """
     df = df.copy()
     bracket = np.zeros(df.shape[0])
     bracket[1:] = df.loc[1:,'start'].values - df.loc[:df.shape[0]-2, 'end'].values
     return bracket/60000000000 % 1440
 
-def get_delta(df):
-    df = df.copy()
-    bracket = np.zeros(df.shape[0])
-    bracket[1:] = df.loc[1:,'start'].values - df.loc[:df.shape[0]-2, 'end'].values
-    return bracket/60000000000
-
 def get_p_day(df, n):
+    """
+    takes in two datetime columns
+    returns a datetime column with time difference values.
+    """
     n -= 1
     p1 = list(df.loc[:df.shape[0]-(2+n), 'start'])
     for _ in range(n+1):
@@ -202,7 +233,10 @@ def get_p_day(df, n):
     return p1
 
 def get_diff(df, col):
-
+    """
+    takes in two datetime columns
+    returns a datetime column with time difference values
+    """
     def convert_diff(x):
         if x > 900:
             x -= 1440 
@@ -216,6 +250,9 @@ def get_diff(df, col):
     return  raw_diff.apply(convert_diff)
 
 def get_avg(df, n):
+    """
+    takes in multiple datetime columns and returns a columns with average datetime values
+    """
     # generate ingredients
     scaler = TimeScaler()
     box = pd.DataFrame()
@@ -243,6 +280,9 @@ def get_avg(df, n):
     return scaler.reverse(normed_avg_sin, normed_avg_cos)
 
 def get_var(df, n):
+    """
+    takes in multiple datetime columns and returns a columns with variance among the columns
+    """
     # generate ingredients
     scaler = TimeScaler()
     box = pd.DataFrame()
@@ -260,25 +300,25 @@ def get_var(df, n):
     var_sin = box.loc[:, sin_cols].std(axis=1)
     var_cos = box.loc[:, cos_cols].std(axis=1)
     
-    # get norm for each time vector
-    norm = np.sqrt(var_sin**2 + var_cos**2)
-    
-    # normalize
-    # normed_var_sin = (var_sin/norm).fillna(0)
-    # normed_var_cos = (var_cos/norm).fillna(0)
     return var_cos + var_sin
-    # return scaler.reverse(var_sin, var_cos)
+    
 
 
 # fitbit HR specific
 #############################################
 def get_top5(x):
+    """
+    takes an array and returns the top 5% values of the array
+    """
     x = x.sort_values(ascending=False)
     cut = int(len(x)*0.05 // 1)
     new_x = x[:cut].copy()
     return new_x.mean()
 
 def get_bottom5(x):
+    """
+    takes an array and returns the bottom 5% values of the array
+    """
     x = x.sort_values(ascending=False)
     cut = int(len(x)*0.95 // 1)
     new_x = x[cut:].copy()
@@ -290,6 +330,10 @@ def get_bottom5(x):
 # INPUT
 #############################################
 def expand_input_time(input_time):
+    """
+    takes in a time string in %H:%M formt 
+    returns a datatime object with today's date appended to it. 
+    """
     h = datetime.strptime(input_time,'%H:%M').hour
     m = datetime.strptime(input_time,'%H:%M').minute
     str_now = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
@@ -301,6 +345,10 @@ def expand_input_time(input_time):
     return input_time
 
 def get_input_bed(input_start, input_end):
+    """
+    takes in two datetime objects
+    returns minutes between the two points in time in integers.
+    """
     td = input_end - input_start
     return td.seconds/60
 
@@ -309,6 +357,10 @@ def get_input_bed(input_start, input_end):
 ##########################################
 
 def estimator_cv_scores(X, y, estimator, a=None, max_iter=None):
+    """
+    takes in a dataset and a target column, and an estimator 
+    returns cross validated test mses, r2 scores, and train mse, r2 scores.
+    """
     from sklearn.metrics import mean_squared_error, r2_score
     
     kf = KFold(5, shuffle=True)

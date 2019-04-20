@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.pipeline import make_pipeline
 from functions import (
-    datespace, parse_datetime, get_deep, get_light, get_rem, get_wake, expand_input_time, get_input_bed, get_delta, get_delta_scale, get_p_day, get_diff, get_avg, get_var, stitch_drop_append2, estimator_cv_scores)
+    datespace, parse_datetime, expand_input_time, get_input_bed, get_delta, get_delta_scale, get_p_day, get_diff, get_avg, get_var, stitch_drop_append2, estimator_cv_scores)
 from classes import (
     TimeScaler, AvgRatioFiller, MatrixPipeline, OneHotEncoder, ZeroFiller, ChainTransformer, StandardScaler, AvgFiller)
 
