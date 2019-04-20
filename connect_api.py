@@ -23,6 +23,9 @@ with open('/Users/Sehokim/capstone/data/access_token.pkl', 'rb') as a:
     access = pickle.load(a)
 with open('/Users/Sehokim/capstone/data/refresh_token.pkl', 'rb') as r:
     refresh = pickle.load(r)
+
+with open('/Users/Sehokim/capstone/data/refresh_token.pkl', 'rb') as r:
+    refresh = pickle.load(r)
 client_id = '22DGXK'
 client_secret = '6bb599aceb4be6c3b3caa2163247ffee'
 

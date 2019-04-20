@@ -1,10 +1,107 @@
-# time to timedleta to minutes
-# minutes to sin-cos scale
 import numpy as np
 import pandas as pd
 from datetime import datetime, timedelta
 from collections import defaultdict
 from math import floor
+
+
+
+class MatrixPipeline:
+    """
+    "takes in an entire pd-df and transform each and every column as specified in PIPELINES"
+    
+    INPUT:
+        branches: list of colname and transformer pairs in tuple
+        matrix: a matrix in need of transformation in pd-df
+
+    OUTPUT:
+        new_matrix: a new matrix with selected features transformed in pd-df
+    """
+
+    def __init__(self, pipes):
+        self.pipes = defaultdict(object)
+        for target, pipeline in pipes:
+            self.pipes[target] = pipeline
+
+    def fit(self, df):
+        self.df = df
+
+    def transform(self, df):
+        new_df = pd.DataFrame()
+        for col in df.columns:
+            if col in self.pipes.keys():
+                pipeline = self.pipes[col]
+                pipeline.fit(df[col])
+                new_col = pipeline.transform(df[col])
+                new_df = pd.concat([new_df, new_col], axis=1)
+            else:
+                new_df = pd.concat([new_df, df[col]], axis=1) 
+        return new_df
+
+
+class ChainTransformer:
+    """
+    "Chains multiple transfomers into one" 
+    """
+    def __init__(self, chain):
+        self.chain = chain
+    
+    def fit(self, X, y=None):
+        pass
+    def transform(self, X):
+        new_X = X.copy()
+        for t in self.chain:
+            t = t
+            t.fit(new_X)
+            new_X = t.transform(new_X)
+        return new_X
+
+
+class OneHotEncoder:
+    """
+    INPUT:
+        series: a target column in pd-s
+
+    OUTPUT:
+        output_df: (a) transformed column(s) in pd-df
+    """
+    def __init__(self):
+        pass
+
+    def fit(self, series, y=None):
+        self.X = series
+
+    def transform(self, series):
+        labels = series.unique()
+        output_df = pd.DataFrame()
+        for label in labels:
+            output_df['is_'+str(label)] = (series == label) + 0
+
+        return output_df 
+
+
+class StandardScaler:
+    """
+    "Standardize the column"
+
+    INPUT:
+        Pandas Series or DataFrame object
+
+    OUTPUT:
+        Pandas Series or DataFrame object 
+    """
+    def __init__(self):
+        pass
+
+    def fit(self, series, y=None):
+        self.X = series
+
+    def transform(self, series):
+        mn = series.mean()
+        std = series.std()
+        new_series = (series - mn)/std
+        return new_series
+
 
 class TimeScaler:
     """
@@ -67,7 +164,9 @@ class TimeScaler:
             minutes = int((np.arctan2(mean_sin, mean_cos) + (2*np.pi)) * pi_minute_scale) 
         return datetime(1,1,1,minutes//60, minutes%60).time()
 
-        
+
+# Missing Value Fillers
+################
 class AvgRatioFiller:
     """
     "Fills NAs with appropriate values."
@@ -117,92 +216,16 @@ class ZeroFiller:
         return new_series
 
 
-class MatrixPipeline:
-    """
-    "takes in an entire pd-df and transform each and every column as specified in PIPELINES"
-    
-    INPUT:
-        branches: list of colname and transformer pairs in tuple
-        matrix: a matrix in need of transformation in pd-df
-
-    OUTPUT:
-        new_matrix: a new matrix with selected features transformed in pd-df
-    """
-
-    def __init__(self, pipes):
-        self.pipes = defaultdict(object)
-        for target, pipeline in pipes:
-            self.pipes[target] = pipeline
-
-    def fit(self, df):
-        self.df = df
-
-    def transform(self, df):
-        new_df = pd.DataFrame()
-        for col in df.columns:
-            if col in self.pipes.keys():
-                pipeline = self.pipes[col]
-                pipeline.fit(df[col])
-                new_col = pipeline.transform(df[col])
-                new_df = pd.concat([new_df, new_col], axis=1)
-            else:
-                new_df = pd.concat([new_df, df[col]], axis=1) 
-        return new_df
-
-
-class OneHotEncoder:
-    """
-    INPUT:
-        series: a target column in pd-s
-
-    OUTPUT:
-        output_df: (a) transformed column(s) in pd-df
-    """
-    def __init__(self):
-        pass
-
-    def fit(self, series, y=None):
-        self.X = series
-
-    def transform(self, series):
-        labels = series.unique()
-        output_df = pd.DataFrame()
-        for label in labels:
-            output_df['is_'+str(label)] = (series == label) + 0
-
-        return output_df 
-
-
-class StandardScaler:
-    def __init__(self):
-        pass
-
-    def fit(self, series, y=None):
-        self.X = series
-
-    def transform(self, series):
-        mn = series.mean()
-        std = series.std()
-        new_series = (series - mn)/std
-        return new_series
-
-
-class ChainTransformer:
-    def __init__(self, chain):
-        self.chain = chain
-    
-    def fit(self, X, y=None):
-        pass
-    def transform(self, X):
-        new_X = X.copy()
-        for t in self.chain:
-            t = t
-            t.fit(new_X)
-            new_X = t.transform(new_X)
-        return new_X
-
-
 class AvgFiller:
+    """
+    "Fills NaNs with average value of the column"
+
+    INPUT:
+        Pandas Series or DataFrame object
+
+    OUTPUT:
+        Pandas Series or DataFrame object 
+    """
     def __init__(self):
         pass
 
