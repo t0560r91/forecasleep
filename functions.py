@@ -56,14 +56,13 @@ def datespace(start, end, step=1):
 
 def scale_time(time):
     """
-    "Scale and split time strings to fit the parameter for the model"
+    "Scale and split time to sin_cos_time"
     
     INPUT:
         start: time string in '%H:%M'
-        end: time string in '%H:%M'
     
     OUTPUT:
-        start_sin, start_cos, end_sin, end_cos in ndarray
+        sin_time, cos_time
     """
     td = timedelta(hours=time.hour, minutes=time.minute)
     in_minutes = td.seconds//60

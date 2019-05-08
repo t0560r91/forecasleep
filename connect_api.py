@@ -19,12 +19,12 @@ from classes import (
 
 
 # import tokens
-with open('/Users/Sehokim/capstone/data/access_token.pkl', 'rb') as a:
+with open('/Users/Sehokim/usg/data/access_token.pkl', 'rb') as a:
     access = pickle.load(a)
-with open('/Users/Sehokim/capstone/data/refresh_token.pkl', 'rb') as r:
+with open('/Users/Sehokim/usg/data/refresh_token.pkl', 'rb') as r:
     refresh = pickle.load(r)
 
-with open('/Users/Sehokim/capstone/data/refresh_token.pkl', 'rb') as r:
+with open('/Users/Sehokim/usg/data/refresh_token.pkl', 'rb') as r:
     refresh = pickle.load(r)
 client_id = '22DGXK'
 client_secret = '6bb599aceb4be6c3b3caa2163247ffee'
@@ -204,5 +204,5 @@ f'Estimated sleep efficiency for the night of {datetime.today().date()}: {y_:10.
 f'Average sleep efficiency for the past 7 days: {avg_p7_effic:20.2f} out of 100')
 
 # export the result
-with open('/Users/Sehokim/capstone/data/prediction.pkl', 'wb') as p:
+with open('/Users/Sehokim/usg/data/prediction.pkl', 'wb') as p:
     pickle.dump(result, p)

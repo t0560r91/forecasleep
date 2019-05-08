@@ -20,9 +20,9 @@ def index():
 @app.route('/get_token', methods=['GET','POST'])
 def token():
     data = json.loads(request.data)
-    with open('/Users/Sehokim/capstone/data/access_token.pkl', 'wb') as s:
+    with open('/Users/Sehokim/usg/data/access_token.pkl', 'wb') as s:
         pickle.dump(data['access_token'], s)
-    with open('/Users/Sehokim/capstone/data/refresh_token.pkl', 'wb') as e:
+    with open('/Users/Sehokim/usg/data/refresh_token.pkl', 'wb') as e:
         pickle.dump(data['refresh_token'], e)
     return jsonify({'result':'authorized'})
 
@@ -30,9 +30,9 @@ def token():
 @app.route('/input_data', methods=['GET', 'POST'])
 def input_data():
     data = json.loads(request.data)
-    with open('/Users/Sehokim/capstone/data/start.pkl', 'wb') as s:
+    with open('/Users/Sehokim/usg/data/start.pkl', 'wb') as s:
         pickle.dump(data['start'], s)
-    with open('/Users/Sehokim/capstone/data/end.pkl', 'wb') as e:
+    with open('/Users/Sehokim/usg/data/end.pkl', 'wb') as e:
         pickle.dump(data['end'], e)
     return jsonify({'start': data['start'], 'end': data['end']})
 
@@ -40,7 +40,7 @@ def input_data():
 @app.route('/get_prediction', methods=['GET'])
 def build_model():
     import connect_api
-    with open('/Users/Sehokim/capstone/data/prediction.pkl', 'rb') as pred:
+    with open('/Users/Sehokim/usg/data/prediction.pkl', 'rb') as pred:
         prediction = pickle.load(pred)
     return jsonify({'prediction' : prediction})
 
