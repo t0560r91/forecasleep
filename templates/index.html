@@ -33,12 +33,12 @@
     def get_token(ev):
         auth_url = 'https://api.fitbit.com/oauth2/token'
         auth_code = document['url'].value
-        form_param = f'client_id=22DPDJ&grant_type=authorization_code&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000&{auth_code}'
+        form_param = f'client_id=22DGXK&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fforecasleep.com&{auth_code}'
             
         req = ajax.ajax()
         req.open('POST', auth_url, True)
         req.set_header('content-type', 'application/x-www-form-urlencoded')
-        req.set_header('Authorization', 'Basic MjJEUERKOmNkZGU0ZDA5NzNhNDc5M2Y1ZGZjODE5Y2U1YmVmM2Jl')
+        req.set_header('Authorization', 'Basic MjJER1hLOjZiYjU5OWFjZWI0YmU2YzNiM2NhYTIxNjMyNDdmZmVl')
         req.send(form_param)
         req.bind('complete', put_token)
         
@@ -95,8 +95,7 @@
     #####################################################
     document['token_button'].click()
 </script>
-<a href="
-https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=22DPDJ&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800"> Login 
+<a href="https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=22DGXK&redirect_uri=https%3A%2F%2Fforecasleep.com&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800"> Login 
 </a>
 <select id="start_input">
         <option value="None">Start Time</option>

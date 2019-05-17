@@ -52,16 +52,8 @@ def build_model():
     except:
         return jsonify({'line1' : 'Error computing the data', 'line2': ' '})
 
-# if __name__ == '__main__':
-#     # unpickle 
-#     # connect to the database
-#     mc = pymongo.MongoClient(host="localhost", port=27017)
-#     db = mc['fraud']
-#     transactions_coll = db['transactions']
-    
-#     client = EventAPIClient()
-#     client.collect()
-#     app.run(host='0.0.0.0', port=8080, debug=True)
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=443, debug=True, ssl_context=('/etc/letsencrypt/live/forecasleep.com/fullchain.pem','/etc/letsencrypt/live/forecasleep.com/privkey.pem'))
 
 
 

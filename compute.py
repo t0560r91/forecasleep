@@ -22,12 +22,6 @@ bucket = 'https://s3.us-west-2.amazonaws.com/stonechild88'
 res = requests.get(bucket+'/cred.json')
 client_id = json.loads(res.text)['client_id']
 client_secret = json.loads(res.text)['client_secret']
-# client_id = '22DGXK'
-# client_secret = '6bb599aceb4be6c3b3caa2163247ffee'
-
-# test
-# '22DPDJ'
-# 'cdde4d0973a4793f5dfc819ce5bef3be'
 
 # import tokens
 res = requests.get(bucket + '/token_data.json')
