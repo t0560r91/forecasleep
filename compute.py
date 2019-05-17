@@ -30,7 +30,6 @@ client_secret = json.loads(res.text)['client_secret']
 # 'cdde4d0973a4793f5dfc819ce5bef3be'
 
 # import tokens
-
 res = requests.get(bucket + '/token_data.json')
 access = json.loads(res.text)['access_token']
 refresh = json.loads(res.text)['refresh_token']
@@ -111,10 +110,10 @@ raw_sleep.reset_index(inplace=True, drop=True)
 sel_sleep = raw_sleep[['start','end','bed','effic']]
 
 # import and define user input start and end time
-with open('/Users/Sehokim/capstone/data/start.pkl', 'rb') as s:
-    raw_input_start = pickle.load(s)
-with open('/Users/Sehokim/capstone/data/end.pkl', 'rb') as s:
-    raw_input_end = pickle.load(s)
+res = requests.get(bucket+'/input_data.json')
+raw_input_start = json.loads(res.text)['start']
+raw_input_end = json.loads(res.text)['end']
+
     
 # apn_sleep
 input_start = expand_input_time(raw_input_start)

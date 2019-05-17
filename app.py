@@ -6,43 +6,48 @@ import random
 import pandas as pd
 import pickle
 import numpy as np
+import requests
 # import webapi
 
 # create app
 app = Flask(__name__, static_url_path="")
-    
+bucket = 'https://s3.us-west-2.amazonaws.com/stonechild88'
+
 @app.route('/')
 def index():
     """Return the main page."""
     return render_template('index.html')
 
 
-@app.route('/get_token', methods=['GET','POST'])
-def token():
-    data = json.loads(request.data)
-    with open('/Users/Sehokim/usg/data/access_token.pkl', 'wb') as s:
-        pickle.dump(data['access_token'], s)
-    with open('/Users/Sehokim/usg/data/refresh_token.pkl', 'wb') as e:
-        pickle.dump(data['refresh_token'], e)
-    return jsonify({'result':'authorized'})
+@app.route('/put_token', methods=['GET','POST'])
+def put_token():
+    res = requests.put(bucket + '/token_data.json', data=request.data, headers={'Content-Type':'Application/json'})
+
+    if res.status_code == 200:
+        return jsonify({'result':'Authorized'})
+    else:
+        return jsonify({'result':'Authorization Failed'})
+        
 
 
 @app.route('/input_data', methods=['GET', 'POST'])
 def input_data():
-    data = json.loads(request.data)
-    with open('/Users/Sehokim/usg/data/start.pkl', 'wb') as s:
-        pickle.dump(data['start'], s)
-    with open('/Users/Sehokim/usg/data/end.pkl', 'wb') as e:
-        pickle.dump(data['end'], e)
-    return jsonify({'start': data['start'], 'end': data['end']})
+    input_data = json.loads(request.data)
+    res = requests.put(bucket + '/input_data.json', data=request.data, headers={'Content-Type':'Application/json'})
+    if res.status_code == 200:
+        return jsonify({'start':input_data['start'], 'end': input_data['end']})
+    else:
+        return jsonify({'result':'Error in registering start and end time'})
 
 
 @app.route('/get_prediction', methods=['GET'])
 def build_model():
-    import connect_api
-    with open('/Users/Sehokim/usg/data/prediction.pkl', 'rb') as pred:
-        prediction = pickle.load(pred)
-    return jsonify({'prediction' : prediction})
+    import compute
+    res = requests.get(bucket + '/pred.json')
+    if res.status_code == 200:
+        return jsonify(json.loads(res.text))
+    else:
+        return jsonify({'result' : 'Error'})
 
 
 # if __name__ == '__main__':
@@ -55,3 +60,6 @@ def build_model():
 #     client = EventAPIClient()
 #     client.collect()
 #     app.run(host='0.0.0.0', port=8080, debug=True)
+
+
+
