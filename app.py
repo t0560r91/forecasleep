@@ -42,13 +42,15 @@ def input_data():
 
 @app.route('/get_prediction', methods=['GET'])
 def build_model():
-    import compute
-    res = requests.get(bucket + '/pred.json')
-    if res.status_code == 200:
-        return jsonify(json.loads(res.text))
-    else:
-        return jsonify({'result' : 'Error'})
-
+    try:
+        import compute
+        res = requests.get(bucket + '/pred.json')
+        if res.status_code == 200:
+            return jsonify(json.loads(res.text))
+        else:
+            return jsonify({'line1' : 'Error receiving the data', 'line2': ' '})
+    except:
+        return jsonify({'line1' : 'Error computing the data', 'line2': ' '})
 
 # if __name__ == '__main__':
 #     # unpickle 

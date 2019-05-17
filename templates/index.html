@@ -1,98 +1,157 @@
 <html>
 <head>
+<title>Ultimate Sleep Guide</title>
 <script src="{{ url_for('static', filename='brython.js') }}"></script>
 <script src="{{ url_for('static', filename='brython_stdlib.js') }}"></script>
 </head>
 
 <body onload="brython(1)">
-
+<h1>Ultimate Sleep Guide</h1>
+<section>
+<h3>Introduction</h3>
+<p>As much as an ambitious data scientist wants to discover a new insight to better the world during the day, the data scientist needs a full recovery of mind and body over the night in order to access the full focus and endurance given for a day. Our body brutally penalizes us for not giving it enough rest, especially when we need the most out of it. So we make a deal with our body that we will give it the 8 hours of sleep, as recommended by doctors, in return of fully recovered mind and body the next day. However, the body still throws you a tantrum by saying “No! that was not the right amount of rest I requested!”. As it turns out, the 8 hours of awful sleep from yesterday is not the same as the 8 hours of super restful sleep from last week. When the sleep quality is not tangible, how can we know how much to sleep in order to fully recover our body?</p><br>
+</section>
+<section>
+<h3>Objective</h3>
+<p>The objective is to help users knowingly decide how much to sleep by constructing a prediction model that user can interact over web application to estimate the sleep quality for each night. Sleep quality can be measured by “minutes of deep sleep”</p><br>
+</section>
+<section>
+<h3>Method</h3>
+<p>The product builds a model at each use utilizing Lasso Regression (regularization strength = 1.28) to predict “minutes of deep sleep” based on each user’s past sleep data collected through a wearable tracker device. New model is fit at each day upon predict-activation in order to include up-to-date data. Evaluated model performance with cross validated R-Square.</p><br>
+</section>
+<section>
+<h3>Application Description</h3>
+<p>Developed an web application where user can authorize the server to fetch sleep data directly from Fitbit Web API and user can input anticipated sleep start and end time to receive back a calculated sleep quality estimation. Currently developing for a more in-depth sleep analysis to be presented to the user which includes a list of most influencing predictors.</p><br>
+</section>
+<section>
+<h3>Application</h3>
+<script type="text/python3">
+    from browser import document, alert, ajax, window
+    import json
+    
+    #####################################################
+    def get_token(ev):
+        auth_url = 'https://api.fitbit.com/oauth2/token'
+        auth_code = document['url'].value
+        form_param = f'client_id=22DPDJ&grant_type=authorization_code&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000&{auth_code}'
+            
+        req = ajax.ajax()
+        req.open('POST', auth_url, True)
+        req.set_header('content-type', 'application/x-www-form-urlencoded')
+        req.set_header('Authorization', 'Basic MjJEUERKOmNkZGU0ZDA5NzNhNDc5M2Y1ZGZjODE5Y2U1YmVmM2Jl')
+        req.send(form_param)
+        req.bind('complete', put_token)
+        
+    
+    def put_token(res):
+        req = ajax.ajax()
+        req.open('POST', 'put_token', True)
+        req.set_header('content-type', 'application/json')
+        req.send(res.text)
+    
+        if res.status == 200:
+            document['output1'].html = 'Logged In'
+        else:
+            document['output1'].html = 'Welcome, please login to your Fitbit Account to use the application.'
+    
+    document['token_button'].bind('click', get_token)
+    
+    
+    #####################################################
+    def input_data(ev):
+        req = ajax.ajax()
+        req.open('POST', 'input_data', True)
+        req.bind('complete', display_input)
+        req.send(json.dumps({"start": document['start_input'].value, "end": document['end_input'].value}))
+    
+    def display_input(res):
+        data = json.loads(res.text)
+        document['output2'].html = f'Entered Sleep Start Time: {data["start"]}'
+        document['output3'].html = f'Entered Sleep End Time: {data["end"]}'
+    
+    
+    #####################################################
+    def get_prediction(ev):
+        req = ajax.ajax()
+        req.open('GET', 'get_prediction', True)
+        req.send()
+        req.bind('complete', display_prediction)
+    
+    def display_prediction(res):
+        data = json.loads(res.text)
+        document['output4'].html = data['line1']
+        document['output5'].html = data['line2']
+    
+    def display_loading(ev):
+        document['output4'].html = 'fitting best model...'
+        document['output5'].html = ' '
+    
+    document["calculate_button"].bind("click", display_loading)
+    document["calculate_button"].bind("click", input_data)
+    document["calculate_button"].bind("click", get_prediction)
+    
+    
+    
+    #####################################################
+    document['token_button'].click()
+</script>
 <a href="
 https://www.fitbit.com/oauth2/authorize?response_type=code&client_id=22DPDJ&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000&scope=activity%20heartrate%20location%20nutrition%20profile%20settings%20sleep%20social%20weight&expires_in=604800"> Login 
 </a>
-
-<script type="text/python3">
-from browser import document, alert, ajax, window
-import json
-
-#####################################################
-def get_token(ev):
-    auth_url = 'https://api.fitbit.com/oauth2/token'
-    auth_code = document['url'].value
-    form_param = f'client_id=22DPDJ&grant_type=authorization_code&redirect_uri=http%3A%2F%2F127.0.0.1%3A5000&{auth_code}'
-        
-    req = ajax.ajax()
-    req.open('POST', auth_url, True)
-    req.set_header('content-type', 'application/x-www-form-urlencoded')
-    req.set_header('Authorization', 'Basic MjJEUERKOmNkZGU0ZDA5NzNhNDc5M2Y1ZGZjODE5Y2U1YmVmM2Jl')
-    req.send(form_param)
-    req.bind('complete', put_token)
-    
-
-def put_token(res):
-    req = ajax.ajax()
-    req.open('POST', 'put_token', True)
-    req.set_header('content-type', 'application/json')
-    req.send(res.text)
-
-    if res.status == 200:
-        document['output1'].html = 'Logged In'
-    else:
-        document['output1'].html = 'Welcome, please login to your Fitbit Account to use the application.'
-
-document['token_button'].bind('click', get_token)
-
-
-#####################################################
-def input_data(ev):
-    req = ajax.ajax()
-    req.open('POST', 'input_data', True)
-    req.bind('complete', display_input)
-    req.send(json.dumps({"start": document['start_input'].value, "end": document['end_input'].value}))
-
-def display_input(res):
-    data = json.loads(res.text)
-    document['output2'].html = data['start']
-    document['output3'].html = data['end']
-
-document["input_button"].bind("click", input_data)
-
-
-#####################################################
-def get_prediction(ev):
-    req = ajax.ajax()
-    req.open('GET', 'get_prediction', True)
-    req.send()
-    req.bind('complete', display_prediction)
-
-def display_prediction(res):
-    data = json.loads(res.text)
-    document['output4'].html = data['line1']
-    document['output5'].html = data['line2']
-
-def display_loading(ev):
-    document['output4'].html = 'fitting best model...'
-
-document["calculate_button"].bind("click", display_loading)
-document["calculate_button"].bind("click", get_prediction)
-
-
-#####################################################
-document['token_button'].click()
-
-
-
-</script>
-
-<button id="token_button", hidden="hidden">token</button>
-<input id="start_input">start</input>
-<input id="end_input">end</input>
-<input type="hidden" id="url"> </input>
-<script>
-    var u = window.location.search;
-    u = u.substring(1,u.length);
-    document.getElementById("url").value = u;
-</script>
-<button id="input_button">input</button>
+<select id="start_input">
+        <option value="None">Start Time</option>
+        <option value="18:00">06:00 PM</option>
+        <option value="19:00">07:00 PM</option>
+        <option value="20:00">08:00 PM</option>
+        <option value="21:00">09:00 PM</option>
+        <option value="22:00">10:00 PM</option>
+        <option value="23:00">11:00 PM</option>
+        <option value="00:00">12:00 AM</option>
+        <option value="01:00">01:00 AM</option>
+        <option value="02:00">02:00 AM</option>
+        <option value="03:00">03:00 AM</option>
+        <option value="04:00">04:00 AM</option>
+        <option value="05:00">05:00 AM</option>
+        <option value="06:00">06:00 AM</option>
+        <option value="07:00">07:00 AM</option>
+        <option value="08:00">08:00 AM</option>
+        <option value="09:00">09:00 AM</option>
+        <option value="10:00">10:00 AM</option>
+        <option value="11:00">11:00 AM</option>
+        <option value="12:00">12:00 PM</option>
+        <option value="13:00">01:00 PM</option>
+        <option value="14:00">02:00 PM</option>
+        <option value="15:00">03:00 PM</option>
+        <option value="16:00">04:00 PM</option>
+        <option value="17:00">05:00 PM</option>
+</select>
+<select id="end_input">
+        <option value="None">End Time</option>
+        <option value="03:00">03:00 AM</option>
+        <option value="04:00">04:00 AM</option>
+        <option value="05:00">05:00 AM</option>
+        <option value="06:00">06:00 AM</option>
+        <option value="07:00">07:00 AM</option>
+        <option value="08:00">08:00 AM</option>
+        <option value="09:00">09:00 AM</option>
+        <option value="10:00">10:00 AM</option>
+        <option value="11:00">11:00 AM</option>
+        <option value="12:00">12:00 PM</option>
+        <option value="13:00">01:00 PM</option>
+        <option value="14:00">02:00 PM</option>
+        <option value="15:00">03:00 PM</option>
+        <option value="16:00">04:00 PM</option>
+        <option value="17:00">05:00 PM</option>
+        <option value="18:00">06:00 PM</option>
+        <option value="19:00">07:00 PM</option>
+        <option value="20:00">08:00 PM</option>
+        <option value="21:00">09:00 PM</option>
+        <option value="22:00">10:00 PM</option>
+        <option value="23:00">11:00 PM</option>
+        <option value="00:00">12:00 AM</option>
+        <option value="01:00">01:00 AM</option>
+        <option value="02:00">02:00 AM</option>
+</select>
 <button id="calculate_button">calculate</button>
 <div id="output1"></div>
 <div id="output2"></div>
@@ -100,5 +159,22 @@ document['token_button'].click()
 <div id="output4"></div>
 <div id="output5"></div>
 <div id="output6"></div>
+</section><br>
+<section>
+<h3>Discussion</h3>
+<p>Prediction accuracy can be significantly improved by having a larger dataset and wearing tracker device 24/7 without skipping a day or night, and also including caffeine and alcohol intake data.</p><br>
+</section>
+<p><strong>Tools Used:</strong> Python | Scikit-Learn | Flask | Brython | HTML | Fitbit Tracker Device | Fitbit API | OAuth | SSL<br><strong>Machine Learning Algorithm Used:</strong> Lasso Regression</p><br>
+<p>Copyright 2019-2069 by Seho Kim | Contact: seho@forecasleep.com</p>
+
+
+
+<button id="token_button", hidden="hidden">token</button>
+<input type="hidden" id="url"> </input>
+<script>
+    var u = window.location.search;
+    u = u.substring(1,u.length);
+    document.getElementById("url").value = u;
+</script>
 </body>
 </html>
