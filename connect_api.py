@@ -13,23 +13,22 @@ from functions import (
     datespace, parse_datetime, expand_input_time, get_input_bed, get_delta, get_delta_scale, get_p_day, get_diff, get_avg, get_var, stitch_drop_append2, estimator_cv_scores)
 from classes import (
     TimeScaler, AvgRatioFiller, MatrixPipeline, OneHotEncoder, ZeroFiller, ChainTransformer, StandardScaler, AvgFiller)
+import json
+import requests
 
 
+# get creds
+bucket = 'https://s3.us-west-2.amazonaws.com/stonechild88'
+res = requests.get(bucket+'/cred.json')
+client_id = json.loads(res.text)['client_id']
+client_secret = json.loads(res.text)['client_secret']
 
+# get tokens
+res = requests.get(bucket + '/token_data.json')
+access = json.loads(res.text)['access_token']
+refresh = json.loads(res.text)['refresh_token']
 
-
-# import tokens
-with open('/Users/Sehokim/usg/data/access_token.pkl', 'rb') as a:
-    access = pickle.load(a)
-with open('/Users/Sehokim/usg/data/refresh_token.pkl', 'rb') as r:
-    refresh = pickle.load(r)
-
-with open('/Users/Sehokim/usg/data/refresh_token.pkl', 'rb') as r:
-    refresh = pickle.load(r)
-client_id = '22DGXK'
-client_secret = '6bb599aceb4be6c3b3caa2163247ffee'
-
-# authenticate with token
+# authenticate
 auth_client = fitbit.Fitbit(
     client_id, 
     client_secret, 
@@ -40,8 +39,6 @@ auth_client = fitbit.Fitbit(
 start_date = '2019-02-23'
 end_date = datetime.strftime(datetime.now(), '%Y-%m-%d')
 dates = datespace(start_date, end_date)
-
-
 
 # import sleep data
 res = auth_client.time_series('sleep', base_date=start_date, end_date=end_date)
@@ -104,10 +101,10 @@ raw_sleep.reset_index(inplace=True, drop=True)
 sel_sleep = raw_sleep[['start','end','bed','effic']]
 
 # import and define user input start and end time
-with open('/Users/Sehokim/capstone/data/start.pkl', 'rb') as s:
-    raw_input_start = pickle.load(s)
-with open('/Users/Sehokim/capstone/data/end.pkl', 'rb') as s:
-    raw_input_end = pickle.load(s)
+res = requests.get(bucket+'/input_data.json')
+raw_input_start = json.loads(res.text)['start']
+raw_input_end = json.loads(res.text)['end']
+
     
 # apn_sleep
 input_start = expand_input_time(raw_input_start)
@@ -199,10 +196,12 @@ rfr.fit(X[:len(X)-1],y[:len(X)-1])
 y_ = rfr.predict(X[len(X)-1:])[0]
 avg_p7_effic = np.mean(y[-8:-1])
 
-result = (
-f'Estimated sleep efficiency for the night of {datetime.today().date()}: {y_:10.2f} out of 100',
-f'Average sleep efficiency for the past 7 days: {avg_p7_effic:20.2f} out of 100')
+result = {
+    'line1' : f'Estimated sleep efficiency for the night of {datetime.today().date()}: {y_:10.2f} out of 100', 
+    'line2' : f'Average sleep efficiency for the past 7 days: {avg_p7_effic:20.2f} out of 100'
+    }
 
+#   f'Estimated sleep efficiency for the night of {datetime.today().date()}: {y_:10.2f} out of 100\n' + f'Average sleep efficiency for the past 7 days: {avg_p7_effic:20.2f} out of 100')
 # export the result
-with open('/Users/Sehokim/usg/data/prediction.pkl', 'wb') as p:
-    pickle.dump(result, p)
+
+res = requests.put(bucket+'/pred.json', data=json.dumps(result))
