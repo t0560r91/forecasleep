@@ -17,51 +17,54 @@ import json
 import requests
 
 
-# get creds
+# get tokens
 bucket = 'https://s3.us-west-2.amazonaws.com/stonechild88'
-res = requests.get(bucket+'/cred.json')
-client_id = json.loads(res.text)['client_id']
-client_secret = json.loads(res.text)['client_secret']
+token = requests.get(bucket + '/token_data.json')
 
-# import tokens
-res = requests.get(bucket + '/token_data.json')
-access = json.loads(res.text)['access_token']
-refresh = json.loads(res.text)['refresh_token']
-
-
-# authenticate with token
-auth_client = fitbit.Fitbit(
-    client_id, 
-    client_secret, 
-    access_token=access, 
-    refresh_token=refresh)
 
 #define date range
-start_date = '2019-02-23'
-end_date = datetime.strftime(datetime.now(), '%Y-%m-%d')
-dates = datespace(start_date, end_date)
-
+start_date = '2018-12-25'
+end_date = datetime.now().strftime('%Y-%m-%d')
 
 
 # import sleep data
-res = auth_client.time_series('sleep', base_date=start_date, end_date=end_date)
-df = pd.DataFrame(res['sleep'])
+def import_sleep_data(token, start_date, end_date):
+    access_token = json.loads(token.text)['access_token']
+    refresh_token = json.loads(token.text)['refresh_token']
+    token_type = json.loads(token.text)['token_type']
+    user_id = json.loads(token.text)['user_id']
+    date_interval = datespace(start_date, end_date, step=100)
+    headers = {"authorization": token_type + " " + access_token}
+    data = pd.DataFrame()
+    for i_date in date_interval:
+        j_date = i_date + timedelta(days=99)
+        endpoint = f'https://api.fitbit.com/1.2/user/{user_id}/sleep/date/{i_date}/{j_date}.json'
+        res = requests.get(endpoint, headers = headers)
+        new_data = json.loads(res.text)
+        data = pd.concat([data, pd.DataFrame(new_data['sleep'])])
+    data.sort_values('startTime', inplace=True)
+    data.reset_index(inplace=True, drop=True)
+    return data
 
-# select columns from raw sleep data
+df = import_sleep_data(token, start_date, end_date)
+
+
+# create new dataframe
 raw_all_sleep = pd.DataFrame()
 raw_all_sleep['start'] = df['startTime'].apply(parse_datetime)
 raw_all_sleep['end'] = df['endTime'].apply(parse_datetime)
 raw_all_sleep['bed'] = df['timeInBed']
 raw_all_sleep['asleep'] = df['minutesAsleep']
+raw_all_sleep['light'] = df['levels'].apply(parse_stage, stage='light')
+raw_all_sleep['rem'] = df['levels'].apply(parse_stage, stage='rem')
+raw_all_sleep['deep'] = df['levels'].apply(parse_stage, stage='deep')
 raw_all_sleep['awake'] = df['minutesAwake']
-raw_all_sleep['effic'] = df['efficiency']
-# sleep['awakening'] = df['levels'].apply(get_wake)
-# sleep['Minutes REM Sleep'] = raw_sleep['levels'].apply(get_rem)
-# sleep['Minutes Light Sleep'] = raw_sleep['levels'].apply(get_light)
-# sleep['Minutes Deep Sleep'] = raw_sleep['levels'].apply(get_deep)
+raw_all_sleep['awakening'] = df['levels'].apply(parse_stage, stage='wake')
+
 raw_all_sleep.sort_values('start', inplace=True)
 raw_all_sleep.reset_index(inplace=True, drop=True)
-sti_all_sleep = stitch_drop_append2(raw_all_sleep)
+sti_all_sleep = stitch_drop_append(raw_all_sleep)
+sti_all_sleep
 
 
 # mask nap and sleep
@@ -88,7 +91,7 @@ async_nap_mask = \
 
 
 # raw_nap
-raw_nap = sti_all_sleep.loc[async_sleep_mask, :].copy()
+raw_nap = sti_all_sleep.loc[async_nap_mask, :].copy()
 raw_nap.reset_index(inplace=True, drop=True)
 # sel_nap
 sel_nap = pd.DataFrame()
@@ -96,19 +99,19 @@ sel_nap['date'] = raw_nap['start'].apply(lambda x: x.date())
 sel_nap['nap'] = raw_nap['asleep']
 
 
-
 # raw_sleep
 raw_sleep = sti_all_sleep.loc[sync_sleep_mask, :].copy()
 raw_sleep.reset_index(inplace=True, drop=True)
 # sel_sleep
-sel_sleep = raw_sleep[['start','end','bed','effic']]
+sel_sleep = raw_sleep[['start','end','bed','deep']]
+
 
 # import and define user input start and end time
 res = requests.get(bucket+'/input_data.json')
 raw_input_start = json.loads(res.text)['start']
 raw_input_end = json.loads(res.text)['end']
 
-    
+
 # apn_sleep
 input_start = expand_input_time(raw_input_start)
 input_end =  expand_input_time(raw_input_end)
@@ -133,7 +136,7 @@ exp_sleep['day'] = exp_sleep['date'].apply(lambda x: x.weekday())
 exp_sleep['start'] = apn_sleep['start']
 exp_sleep['end'] = apn_sleep['end']
 exp_sleep['bed'] = apn_sleep['bed']
-exp_sleep['effic'] = apn_sleep['effic']
+exp_sleep['deep'] = apn_sleep['deep']
 exp_sleep['delta'] = get_delta_scale(apn_sleep)
 
 for i in range(7):
@@ -188,7 +191,7 @@ Xy = Xy[7:].copy()
 Xy.reset_index(inplace=True, drop=True)
 # Xy.drop('index', axis=1, inplace=True)
 Xy.pop('date')
-y = Xy.pop('effic')
+y = Xy.pop('deep')
 X = Xy
 
 
@@ -197,11 +200,11 @@ X = Xy
 rfr = RandomForestRegressor(1000)
 rfr.fit(X[:len(X)-1],y[:len(X)-1])
 y_ = rfr.predict(X[len(X)-1:])[0]
-avg_p7_effic = np.mean(y[-8:-1])
+avg_p7_deep = np.mean(y[-8:-1])
 
 result = {
-    'line1' : f'Estimated sleep efficiency for the night of {datetime.today().date()}: {y_:10.2f} out of 100', 
-    'line2' : f'Average sleep efficiency for the past 7 days: {avg_p7_effic:20.2f} out of 100'
+    'line1' : f'Estimated deep sleep minutes for the night of {datetime.today().date()}: {y_:10.2f} out of 100', 
+    'line2' : f'Average deep sleep minutes for the past 7 days: {avg_p7_deep:20.2f} out of 100'
     }
 
 #   f'Estimated sleep efficiency for the night of {datetime.today().date()}: {y_:10.2f} out of 100\n' + f'Average sleep efficiency for the past 7 days: {avg_p7_effic:20.2f} out of 100')

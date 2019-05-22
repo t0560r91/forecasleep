@@ -118,7 +118,7 @@ def reformat_time_string(time_str):
 
 
 # fitbit sleep specific
-#############################
+#############################     
 def parse_stage(x, stage='deep'):
     """
     "parse a Fitbit-generated nested dictionary of sleep stage data 
@@ -138,8 +138,7 @@ def parse_stage(x, stage='deep'):
         elif stage == 'wake':
             return x['summary'][stage]['count']
     except:
-        return np.nan        
-
+        return np.nan   
 
 def stitch_drop_append(df):
     """
@@ -159,27 +158,6 @@ def stitch_drop_append(df):
         else:
             new_deep = np.nan
         new_dict = {'start':new_start, 'end':new_end, 'bed':new_bed, 'deep':new_deep}
-
-        new_df.drop([e,l], inplace=True)        
-        new_df = pd.concat([new_df, pd.DataFrame(new_dict, index=[100])], sort=False)
-    new_df.sort_values('start', inplace=True)
-    new_df.reset_index(inplace=True, drop=True)
-    return new_df
-
-def stitch_drop_append2(df):
-    new_df=df.copy()
-    later = np.where((get_delta(new_df) < 120) & (get_delta(new_df) > 0))[0]
-    earlier = later - 1
-    stitch_ind = list(zip(earlier, later))
-    for e, l in stitch_ind:
-        new_start = new_df.loc[e,'start']
-        new_end = new_df.loc[l,'end']
-        new_bed = (new_df.loc[l,'end'] - new_df.loc[e,'start']).seconds/60
-        if ~np.isnan(new_df.loc[l,'effic'] + new_df.loc[e, 'effic']):
-            new_effic = new_df.loc[l,'effic'] + new_df.loc[e, 'effic']/2
-        else:
-            new_effic = np.nan
-        new_dict = {'start':new_start, 'end':new_end, 'bed':new_bed, 'effic':new_effic}
 
         new_df.drop([e,l], inplace=True)        
         new_df = pd.concat([new_df, pd.DataFrame(new_dict, index=[100])], sort=False)
