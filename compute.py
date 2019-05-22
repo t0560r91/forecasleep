@@ -10,16 +10,19 @@ from sklearn.model_selection import train_test_split, KFold
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.pipeline import make_pipeline
 from functions import (
-    datespace, parse_datetime, expand_input_time, get_input_bed, get_delta, get_delta_scale, get_p_day, get_diff, get_avg, get_var, stitch_drop_append2, estimator_cv_scores)
+    datespace, parse_datetime, expand_input_time, get_input_bed, get_delta, get_delta_scale, get_p_day, get_diff, get_avg, get_var, stitch_drop_append, estimator_cv_scores, parse_stage
+    )
 from classes import (
     TimeScaler, AvgRatioFiller, MatrixPipeline, OneHotEncoder, ZeroFiller, ChainTransformer, StandardScaler, AvgFiller)
 import json
 import requests
 
-
+print('imported all moduels')
 # get tokens
 bucket = 'https://s3.us-west-2.amazonaws.com/stonechild88'
 token = requests.get(bucket + '/token_data.json')
+
+print('got token')
 
 
 #define date range
@@ -48,6 +51,7 @@ def import_sleep_data(token, start_date, end_date):
 
 df = import_sleep_data(token, start_date, end_date)
 
+print('imported sleep data')
 
 # create new dataframe
 raw_all_sleep = pd.DataFrame()
@@ -66,6 +70,7 @@ raw_all_sleep.reset_index(inplace=True, drop=True)
 sti_all_sleep = stitch_drop_append(raw_all_sleep)
 sti_all_sleep
 
+print('created new dataframe')
 
 # mask nap and sleep
 sync_sleep_mask = \
@@ -97,7 +102,7 @@ raw_nap.reset_index(inplace=True, drop=True)
 sel_nap = pd.DataFrame()
 sel_nap['date'] = raw_nap['start'].apply(lambda x: x.date())
 sel_nap['nap'] = raw_nap['asleep']
-
+print('generated nap df')
 
 # raw_sleep
 raw_sleep = sti_all_sleep.loc[sync_sleep_mask, :].copy()
@@ -105,12 +110,14 @@ raw_sleep.reset_index(inplace=True, drop=True)
 # sel_sleep
 sel_sleep = raw_sleep[['start','end','bed','deep']]
 
+print('generated sleep_df')
 
 # import and define user input start and end time
 res = requests.get(bucket+'/input_data.json')
 raw_input_start = json.loads(res.text)['start']
 raw_input_end = json.loads(res.text)['end']
 
+print('imported user input')
 
 # apn_sleep
 input_start = expand_input_time(raw_input_start)
@@ -173,6 +180,7 @@ branches = [
     ('p2', time_sc),
     ('p3', time_sc),
     ('p4', time_sc),
+    ('deep', avg_sc),
     ('p5', time_sc),
     ('p6', time_sc),
     ('p7', time_sc),
@@ -195,12 +203,12 @@ y = Xy.pop('deep')
 X = Xy
 
 
-
 # build random forest
-rfr = RandomForestRegressor(1000)
-rfr.fit(X[:len(X)-1],y[:len(X)-1])
-y_ = rfr.predict(X[len(X)-1:])[0]
+model = LinearRegression()
+model.fit(X[:len(X)-1],y[:len(X)-1])
+y_ = model.predict(X[len(X)-1:])[0]
 avg_p7_deep = np.mean(y[-8:-1])
+print('built linear regression')
 
 result = {
     'line1' : f'Estimated deep sleep minutes for the night of {datetime.today().date()}: {y_:10.2f} out of 100', 
