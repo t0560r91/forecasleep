@@ -211,11 +211,8 @@ avg_p7_deep = np.mean(y[-8:-1])
 print('built linear regression')
 
 result = {
-    'line1' : f'Estimated deep sleep minutes for the night of {datetime.today().date()}: {y_:10.2f} out of 100', 
-    'line2' : f'Average deep sleep minutes for the past 7 days: {avg_p7_deep:20.2f} out of 100'
+    'line1' : f'Estimated deep sleep minutes for the night of {datetime.today().date()}: {y_:10.2f}', 
+    'line2' : f'Average deep sleep minutes for the past 7 days: {avg_p7_deep:20.2f}'
     }
-
-#   f'Estimated sleep efficiency for the night of {datetime.today().date()}: {y_:10.2f} out of 100\n' + f'Average sleep efficiency for the past 7 days: {avg_p7_effic:20.2f} out of 100')
-# export the result
 
 res = requests.put(bucket+'/pred.json', data=json.dumps(result))
