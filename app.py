@@ -49,14 +49,14 @@ def input_data():
 @app.route('/get_prediction', methods=['GET'])
 def build_model():
     import compute
-    try:
-        res = requests.get(bucket + '/pred.json')
-        if res.status_code == 200:
-            return jsonify(json.loads(res.text))
-        else:
-            return jsonify({'line1' : 'Error receiving the data', 'line2': ' '})
-    except:
-        return jsonify({'line1' : 'Error computing the data', 'line2': ' '})
+    
+    res = requests.get(bucket + '/pred.json')
+    if res.status_code == 200:
+        return jsonify(json.loads(res.text))
+    else:
+        return jsonify({'line1' : 'Error receiving the data', 'line2': ' '})
+
+    # return jsonify({'line1' : 'Error computing the data', 'line2': ' '})
 
 
 # prop the server listening to port 443 using ssl certs saved in the server
