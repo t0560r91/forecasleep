@@ -48,8 +48,8 @@ def input_data():
 # send to client
 @app.route('/get_prediction', methods=['GET'])
 def build_model():
+    import compute
     try:
-        import compute
         res = requests.get(bucket + '/pred.json')
         if res.status_code == 200:
             return jsonify(json.loads(res.text))
