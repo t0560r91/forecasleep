@@ -48,7 +48,7 @@ def input_data():
 # send to client
 @app.route('/get_prediction', methods=['GET'])
 def build_model():
-    import compute
+    os.system("python compute.py")
     
     res = requests.get(bucket + '/pred.json')
     if res.status_code == 200:
