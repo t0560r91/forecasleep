@@ -62,10 +62,10 @@ def build_model():
 # prop the server listening to port 443 using ssl certs saved in the server
 if __name__ == '__main__':
     app.run(host='0.0.0.0', 
-            port=443, 
-            debug=True, 
+            port='443', 
+            debug=True,
             ssl_context=('/etc/letsencrypt/live/forecasleep.com/fullchain.pem',
-                            '/etc/letsencrypt/live/forecasleep.com/privkey.pem'))
+                         '/etc/letsencrypt/live/forecasleep.com/privkey.pem'))
 
 
 
