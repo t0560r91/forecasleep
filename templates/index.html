@@ -28,17 +28,26 @@
 <script type="text/python3">
     from browser import document, alert, ajax, window
     import json
+    import yaml
+    import base64
     
     #####################################################
+    
+    with open('var/config.yaml', 'r') as f:
+        config = yaml.load(f)
+    client_id = config['app']['client_id']
+    client_secret = config['app']['client_secret']
+    b64_client_creds = base64.b64encode(bytes(f'{client_id}:{client_secret}', 'utf-8')).decode('utf-8')
+
     def get_token(ev):
         auth_url = 'https://api.fitbit.com/oauth2/token'
         auth_code = document['url'].value
-        form_param = f'client_id=22DGXK&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fforecasleep.com&{auth_code}'
+        form_param = f'client_id={client_id}&grant_type=authorization_code&redirect_uri=https%3A%2F%2Fforecasleep.com&{auth_code}'
             
         req = ajax.ajax()
         req.open('POST', auth_url, True)
         req.set_header('content-type', 'application/x-www-form-urlencoded')
-        req.set_header('Authorization', 'Basic MjJER1hLOjZiYjU5OWFjZWI0YmU2YzNiM2NhYTIxNjMyNDdmZmVl')
+        req.set_header('Authorization', f'Basic {b64_client_creds})
         req.send(form_param)
         req.bind('complete', put_token)
         
