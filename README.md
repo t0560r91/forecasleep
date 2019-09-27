@@ -1,4 +1,4 @@
-# Ultimate Sleep Guide  
+# Forecast Sleep Quality (https://forecasleep.com)
 
 
 ### Introduction  
@@ -16,5 +16,5 @@ Developed an web application where user can authorize the server to fetch sleep 
 ### Discussion  
 Prediction accuracy can be significantly improved by having a larger dataset and wearing tracker device 24/7 without skipping a day or night, and also including caffeine and alcohol intake data.
 
-Tools Used: Python | Sci-kit Learn | Flask | Brython | HTML | Fitbit Tracker Device | Fitbit Web API 
+Tools Used: Python | Sci-kit Learn | Flask | Nginx | Brython | HTML | Fitbit Tracker Device | Fitbit Web API | Docker | Docker Swarm 
 
